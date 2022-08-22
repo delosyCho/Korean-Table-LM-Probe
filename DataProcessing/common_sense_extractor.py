@@ -1,0 +1,48 @@
+from transformers import ElectraTokenizer
+import tokenization
+
+
+def RepresentsInt(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+
+#vocab = tokenization.load_vocab(vocab_file='vocab.txt')
+#tokenizer = ElectraTokenizer.from_pretrained("monologg/koelectra-base-v3-discriminator")
+
+count = 0
+# vocab file of pre-trained language model
+vocab = tokenization.load_vocab(vocab_file='html_mecab_vocab_128000.txt')
+tokenizer = tokenization.WordpieceTokenizer(vocab=vocab)
+
+triple_file = open('nia_common_triples@180105.nt', 'r', encoding='utf-8')
+triple_lines = triple_file.read().split('\n')
+
+eval_file = open('triples_for_commom_facts_test', 'w', encoding='utf-8')
+
+for line in triple_lines[600000:750000]:
+    if len(line) == 0:
+        continue
+
+    tk = line.split('>')
+
+    object_triple = tk[0].split('/')[-1].replace('_', ' ')
+    relation_triple = tk[1].split('/')[-1]
+    subject_triple = tk[2].replace('\"', '').replace('.', '')
+
+    if relation_triple.find('국가') == -1 and relation_triple.find('언어') == -1:
+        continue
+
+    tokens = tokenizer.tokenize(subject_triple)
+    if len(tokens) == 1:
+        eval_file.write(object_triple + '[split]' + relation_triple + '[split]' + subject_triple + '\n')
+        count += 1
+
+print(len(triple_lines))
+print(count)
+
+eval_file.close()
+triple_file.close()
